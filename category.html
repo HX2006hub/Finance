@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Browse articles by category on HelloInsights.">
+    <script>(function(){var c=new URLSearchParams(location.search).get("cat");if(!c)return;var l=document.createElement("link");l.rel="canonical";l.id="canonicalLink";l.href="https://www.helloinsights.online/category.html?cat="+encodeURIComponent(c);document.head.appendChild(l);})();</script>
     <title>Category - HelloInsights</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ff6b35'/%3E%3Ctext x='16' y='23' text-anchor='middle' fill='white' font-family='Arial,sans-serif' font-weight='bold' font-size='22'%3EH%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
@@ -224,10 +225,10 @@
             '<div class="card-image"><img src="' + article.image + '" alt="' + article.title + '" width="600" height="400" loading="lazy" decoding="async" onerror="this.src=\'' + fb + '\'"></div>' +
             '<div class="card-content">' +
             '<span class="card-category">' + catName + '</span>' +
-            '<h3 class="card-title"><a href="article.html?id=' + article.id + '">' + article.title + '</a></h3>' +
+            '<h3 class="card-title"><a href="articles/' + article.id + '.html">' + article.title + '</a></h3>' +
             '<p class="card-excerpt">' + article.excerpt + '</p>' +
             (date ? '<div class="card-meta"><span>' + date + '</span></div>' : '') +
-            '<a href="article.html?id=' + article.id + '" class="read-more-btn">Read More</a>' +
+            '<a href="articles/' + article.id + '.html" class="read-more-btn">Read More</a>' +
             '</div></article>';
     }
     function renderPage(page) {
@@ -308,7 +309,7 @@
 
     /* Load articles: subdomain loads only its category, main domain uses index for version */
     if (window.IS_SUBDOMAIN) {
-        fetch('articles-' + currentCategory + '.json', { cache: 'force-cache' })
+        fetch('cards-' + currentCategory + '.json', { cache: 'force-cache' })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 allArticles = data.articles || [];
@@ -324,11 +325,11 @@
                 if (grid) grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;padding:3rem;color:#999;">Unable to load articles.</p>';
             });
     } else {
-        fetch('articles-index.json?v=' + Date.now())
+        fetch('articles-index.json')
             .then(function(r) { return r.json(); })
             .then(function(index) {
                 var v = index.v || Date.now();
-                return fetch('articles-' + currentCategory + '.json?v=' + v)
+                return fetch('cards-' + currentCategory + '.json?v=' + v)
                     .then(function(r) { return r.json(); });
             })
             .then(function(data) {

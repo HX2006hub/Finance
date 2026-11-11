@@ -1,0 +1,74 @@
+name: 新文章简报
+description: 填主题和观点，系统生成草稿并开 PR，你审核后再合并发布
+title: "[Brief] "
+labels: ["brief"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        填完提交即可，几分钟后会自动生成草稿 PR（不会直接上线）。
+        带 * 的是必填项。
+
+  - type: input
+    id: topic
+    attributes:
+      label: 主题 *
+      description: 一句话说清这篇文章讲什么
+      placeholder: 2026 年 AI 编程助手为什么开始按 token 计费
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 分类 *
+      options:
+        - technology
+        - ai-tools
+        - finance
+        - health-lifestyle
+    validations:
+      required: true
+
+  - type: input
+    id: audience
+    attributes:
+      label: 目标读者
+      placeholder: 独立开发者、小团队技术负责人
+
+  - type: textarea
+    id: points
+    attributes:
+      label: 核心观点 *
+      description: 一行一条，每条会对应正文的一个小节。3~5 条最合适。
+      placeholder: |
+        按 token 计费让成本可预测，但惩罚反复重试
+        真实成本主要来自上下文膨胀，不是生成量
+        未来半年会出现包月+限额的混合定价
+    validations:
+      required: true
+
+  - type: textarea
+    id: my_take
+    attributes:
+      label: 我的判断 *
+      description: 你的立场或结论。这一栏决定文章的原创性，AI 不会替你编。
+      placeholder: 小团队应该先做上下文管理，再谈换工具。
+    validations:
+      required: true
+
+  - type: textarea
+    id: sources
+    attributes:
+      label: 可引用来源
+      description: 一行一个 URL。没有可以留空，AI 会先给出候选来源。
+      placeholder: |
+        https://example.com/pricing
+        https://example.com/report-2026
+
+  - type: input
+    id: keywords
+    attributes:
+      label: 目标关键词
+      description: 逗号分隔，用于标题与 meta，不是用来堆词
+      placeholder: AI coding assistant pricing, token based billing

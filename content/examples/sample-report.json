@@ -1,0 +1,42 @@
+{
+  "id": "12000012",
+  "title": "AI Coding Assistants Are Moving to Token Billing. Retries Now Cost Money",
+  "category": "ai-tools",
+  "score": 76.1,
+  "grade": "D",
+  "subscores": {
+    "sourcing": 15,
+    "originality": 15.0,
+    "specificity": 5.7,
+    "structure": 12.2,
+    "seo": 8.0,
+    "compliance": 5.0
+  },
+  "max_available": 80,
+  "redlines": [
+    "篇幅不足（636 词，硬下限 900）"
+  ],
+  "notes": [
+    "[sourcing] 3 个外链，其中权威源 1 个",
+    "[originality] 独创句 100%，与库内最高重合 0%",
+    "[specificity] 具体数字/时间只有 1 处",
+    "[structure] 正文仅 636 词（建议 ≥1200）",
+    "[seo] 标题 72 字符（建议 40–65）"
+  ],
+  "metrics": {
+    "words": 636,
+    "h2": 5,
+    "lists": 1,
+    "citations": 3,
+    "authoritative_citations": 1,
+    "claims": 1,
+    "boilerplate": 0,
+    "overlap": 0.0,
+    "novel_sentences": 1.0
+  },
+  "flags": {
+    "pending_judge": true,
+    "ymyl": false,
+    "duplicate_title": false
+  }
+}

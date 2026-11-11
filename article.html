@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Read the latest insights and articles on HelloInsights.">
     <title>Article - HelloInsights</title>
+    <!-- canonical is injected by script: legacy ?id= URLs point to /articles/<id>.html -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
@@ -275,6 +276,23 @@
                 '</div>';
             var siteName = (siteConfig && siteConfig.siteName) ? siteConfig.siteName : 'HelloInsights';
             document.title = article.title + ' - ' + siteName;
+            setMetaTag('name', 'description', article.excerpt || '');
+            setMetaTag('property', 'og:type', 'article');
+            setMetaTag('property', 'og:title', article.title + ' - ' + siteName);
+            setMetaTag('property', 'og:description', article.excerpt || '');
+            setMetaTag('property', 'og:image', heroImg);
+            setMetaTag('property', 'og:url', 'https://www.helloinsights.online/articles/' + article.id + '.html');
+        }
+
+        function setMetaTag(attr, key, value) {
+            if (!value) return;
+            var el = document.head.querySelector('meta[' + attr + '="' + key + '"]');
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, key);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', value);
         }
 
         function buildCardHTML(article, fallback) {
@@ -288,13 +306,13 @@
                 '<div class="card-content">' +
                 '<span class="card-category">' + catName + '</span>' +
                 '<h3 class="card-title">' +
-                '<a href="article.html?id=' + article.id + '">' + article.title + '</a>' +
+                '<a href="articles/' + article.id + '.html">' + article.title + '</a>' +
                 '</h3>' +
                 '<p class="card-excerpt">' + article.excerpt + '</p>' +
                 '<div class="card-meta">' +
                 '<span>📅 ' + date + '</span>' +
                 '</div>' +
-                '<a href="article.html?id=' + article.id + '" class="read-more-btn">Read More...</a>' +
+                '<a href="articles/' + article.id + '.html" class="read-more-btn">Read More...</a>' +
                 '</div>' +
                 '</article>';
         }
@@ -427,7 +445,22 @@
 
             // Step 2: Get article ID from URL
             var urlParams = new URLSearchParams(window.location.search);
-            var articleId = parseInt(urlParams.get('id')) || 1;
+            var rawId = urlParams.get('id');
+            var articleId = parseInt(rawId) || 1;
+
+            // Legacy ?id= URLs are already indexed by Google, so they must keep working.
+            // We render the article normally and expose a canonical pointing at the static
+            // copy, which consolidates ranking there without breaking the old URL.
+            var canonicalEl = document.getElementById('canonicalLink');
+            if (!canonicalEl) {
+                canonicalEl = document.createElement('link');
+                canonicalEl.rel = 'canonical';
+                canonicalEl.id = 'canonicalLink';
+                document.head.appendChild(canonicalEl);
+            }
+            canonicalEl.href = rawId
+                ? 'https://www.helloinsights.online/articles/' + articleId + '.html'
+                : 'https://www.helloinsights.online/';
 
             try {
                 // Step 3: Fetch index

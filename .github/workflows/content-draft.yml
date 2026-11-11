@@ -1,0 +1,134 @@
+name: Content Draft (brief → PR)
+
+# 人工简报 → Gemini 成文 → 评分门禁 → 开 PR。
+# 这条流水线永远不会直接推 main：只有人合并 PR 才会发布。
+
+on:
+  issues:
+    types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "已有 issue 编号（手动重跑用）"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: content-draft-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: true
+
+jobs:
+  draft:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'brief')
+    runs-on: ubuntu-latest
+    env:
+      N: ${{ github.event.issue.number || inputs.issue_number }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 标记流程开始
+        run: |
+          gh label create content-review --color FBCA04 --description "等待人工审核" 2>/dev/null || true
+          gh label create needs-rewrite --color D93F0B --description "未通过质量门禁" 2>/dev/null || true
+          gh issue comment "$N" --body "已收到简报，正在生成草稿（约 1-3 分钟）。" || true
+
+      - name: Issue → brief JSON
+        run: |
+          gh issue view "$N" --json body --jq .body > /tmp/issue.md
+          python3 tools/issue_to_brief.py /tmp/issue.md --issue "$N" --out "content/briefs/issue-$N.json"
+
+      - name: Gemini 成文
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node tools/gemini_generate.mjs \
+            --brief "content/briefs/issue-$N.json" \
+            --out "content/drafts/issue-$N.json"
+
+      - name: 质量门禁
+        run: |
+          python3 tools/qa_gate.py draft \
+            --file "content/drafts/issue-$N.json" \
+            --brief "content/briefs/issue-$N.json" \
+            --out "content/reports/draft-$N.json" > /dev/null || true
+          jq -r '"grade=\(.grade) score=\(.score)"' "content/reports/draft-$N.json"
+
+      - name: 读取判定
+        id: verdict
+        run: |
+          {
+            echo "grade=$(jq -r .grade content/reports/draft-$N.json)"
+            echo "score=$(jq -r .score content/reports/draft-$N.json)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 渲染预览页（noindex）
+        if: steps.verdict.outputs.grade != 'D'
+        run: python3 tools/preview_draft.py "content/drafts/issue-$N.json"
+
+      - name: 未通过 → 打回并说明原因
+        if: steps.verdict.outputs.grade == 'D'
+        run: |
+          python3 tools/pr_body.py \
+            --report "content/reports/draft-$N.json" \
+            --preview "content/drafts/issue-$N.md" \
+            --issue "$N" --out /tmp/reject.md
+          {
+            echo "草稿未通过质量门禁（${{ steps.verdict.outputs.score }} 分），**没有生成 PR，也没有上线**。"
+            echo ""
+            sed -n '1,40p' /tmp/reject.md
+            echo ""
+            echo "> 补充简报信息（尤其是来源链接和『我的判断』）后，重新加上 \`brief\` 标签即可重试。"
+          } > /tmp/reject-body.md
+          gh issue comment "$N" --body-file /tmp/reject-body.md
+          gh issue edit "$N" --add-label needs-rewrite --remove-label brief || true
+          echo "::warning::draft rejected by quality gate"
+
+      - name: 通过 → 提交分支并开 PR
+        if: steps.verdict.outputs.grade != 'D'
+        run: |
+          BRANCH="content/issue-$N"
+          git config user.name "content-bot"
+          git config user.email "content-bot@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add "content/briefs/issue-$N.json" "content/drafts/issue-$N.json" \
+                  "content/drafts/issue-$N.md" "content/reports/draft-$N.json"
+          PREVIEW=$(ls articles/_preview-*.html 2>/dev/null | head -1 || true)
+          [ -n "$PREVIEW" ] && git add "articles/_preview-*.html"
+          git commit -m "content: draft for issue #$N [skip ci]"
+          git push -u origin "$BRANCH" --force
+
+          python3 tools/pr_body.py \
+            --report "content/reports/draft-$N.json" \
+            --preview "content/drafts/issue-$N.md" \
+            --issue "$N" --out /tmp/pr-body.md
+
+          if [ -n "$PREVIEW" ]; then
+            {
+              echo ""
+              echo "**渲染预览**：合并请求的部署预览里打开 \`/$PREVIEW\`（Cloudflare Pages 会在本 PR 下给出预览域名）。"
+            } >> /tmp/pr-body.md
+          fi
+
+          TITLE=$(jq -r '.title' "content/drafts/issue-$N.json")
+          gh pr create \
+            --base main --head "$BRANCH" \
+            --title "content: ${TITLE}" \
+            --body-file /tmp/pr-body.md \
+            --label content-review || gh pr edit "$BRANCH" --body-file /tmp/pr-body.md
+
+          gh issue comment "$N" --body "草稿已生成：$(gh pr view "$BRANCH" --json url --jq .url) — 审核并合并后才会发布。"

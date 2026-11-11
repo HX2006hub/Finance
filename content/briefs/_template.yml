@@ -1,0 +1,27 @@
+# 文章简报模板
+# 复制一份改名为 content/briefs/<slug>.json 后填（JSON 更省事），
+# 或直接在 GitHub 里用 issue 表单提交，Actions 会自动转成这个结构。
+topic: "2026 年 AI 编程助手为什么开始按 token 计费"
+category: "ai-tools"          # technology | finance | ai-tools | health-lifestyle  （finance / health 永不自动发布）
+audience: "独立开发者、小团队技术负责人"
+angle: "从成本结构变化讲定价，而不是泛泛比较工具谁更好用"
+
+# 核心观点：每条都会在正文里对应一个 H2 小节，AI 只准展开、不准改立场
+points:
+  - "按 token 计费让成本可预测，但会惩罚反复重试的用法"
+  - "团队真实成本主要来自上下文膨胀，而不是生成量"
+  - "未来半年会出现『包月 + 限额』的混合定价"
+
+# 你的判断：这一栏决定文章的原创性，必须你写。AI 会把它作为结论段的基础。
+my_take: "小团队应该先做上下文管理，再谈换工具；否则换到任何计费模型都是白花钱。"
+
+# 可引用来源（有就填，没有留空，AI 会先提案再由你确认）
+sources:
+  - "https://example.com/pricing"
+  - "https://example.com/report-2026"
+
+# 站内互链目标（可选）
+internal_links: [10001, 10042]
+
+# 目标关键词（用于标题和 meta，不是堆词）
+keywords: ["AI coding assistant pricing", "token based billing"]

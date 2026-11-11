@@ -1,0 +1,56 @@
+name: Publish Approved Content
+
+# 合并审核 PR 之后运行：把通过门禁的草稿并入站点数据、重建静态页、提交产物。
+# 托管（Cloudflare Pages 等）会在这次 push 后自动部署。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/drafts/**"
+      - "articles-*.json"
+      - "tools/build_static.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 清掉草稿预览页
+        run: |
+          rm -f articles/_preview-*.html
+          echo "cleaned preview pages"
+
+      - name: 并入通过门禁的草稿
+        run: python3 tools/integrate_drafts.py
+
+      - name: 重建静态页与 sitemap
+        run: python3 tools/build_static.py
+
+      - name: 提交生成产物
+        run: |
+          git config user.name "publish-bot"
+          git config user.email "publish-bot@users.noreply.github.com"
+          git add -A articles articles-*.json cards-*.json sitemap.xml content
+          if git diff --staged --quiet; then
+            echo "没有需要提交的变更"
+            exit 0
+          fi
+          git commit -m "publish: integrate approved drafts + rebuild static pages [skip ci]"
+          git push

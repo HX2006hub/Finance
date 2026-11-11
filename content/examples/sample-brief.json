@@ -1,0 +1,23 @@
+{
+  "topic": "2026 年 AI 编程助手为什么开始按 token 计费",
+  "category": "ai-tools",
+  "audience": "独立开发者、小团队技术负责人",
+  "points": [
+    "按 token 计费让成本可预测，但会惩罚反复重试的用法",
+    "团队真实成本主要来自上下文膨胀，而不是生成量",
+    "未来半年会出现「包月 + 限额」的混合定价"
+  ],
+  "my_take": "小团队应该先做上下文管理，再谈换工具；否则换到任何计费模型都是白花钱。",
+  "sources": [
+    "https://example.com/pricing",
+    "https://example.com/report-2026"
+  ],
+  "internal_links": [],
+  "keywords": [
+    "AI coding assistant pricing",
+    "token based billing"
+  ],
+  "slug": "2026-ai-token-12",
+  "issue": "12",
+  "ymyl": false
+}

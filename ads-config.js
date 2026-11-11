@@ -138,6 +138,7 @@
     // Detect Current Page
     // ========================================
     function getCurrentPage() {
+        if (location.pathname.indexOf('/articles/') !== -1) return 'article';
         var path = location.pathname.split('/').pop() || 'index.html';
         if (path.indexOf('article') !== -1) return 'article';
         if (path.indexOf('category') !== -1) return 'category';
